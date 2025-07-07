@@ -36,10 +36,10 @@ export default function QuoteForm() {
   };
 
   return (
-    <main className="min-h-screen bg-cover bg-center" style={{ backgroundImage: "url('/wheat.jpg')" }}>
+    <main className="min-h-screen bg-cover bg-center" style={{ backgroundImage: "url('/tree.jpg')" }}>
       <div className="min-h-screen flex items-center justify-center">
-        <div className="max-w-md w-full p-6 rounded shadow">
-          <h1 className="text-xl font-semibold mb-4">Quote Generator</h1>
+        <div className="max-w-md w-full p-8 bg-white/60 backdrop-blur-sm rounded-lg shadow-lg border border-green-200">
+          <h1 className="text-2xl font-bold mb-6 text-gray-800 text-center">Quote Generator</h1>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -49,24 +49,30 @@ export default function QuoteForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input placeholder="Enter topic (e.g. life, success)" {...field} />
+                      <Input
+                        placeholder="Enter topic (e.g. life, success)"
+                        className="placeholder:text-gray-400 border-green-300 focus:border-green-500 focus:ring-green-500"
+                        {...field}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">Get Quotes</Button>
+              <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-medium">
+                Get Quotes
+              </Button>
             </form>
           </Form>
 
           {/* Popular Topics */}
-          <div className="mt-4">
-            <p className="text-sm text-gray-600 mb-2">Popular topics:</p>
+          <div className="mt-6">
+            <p className="text-sm text-gray-700 mb-3 font-medium">Popular topics:</p>
             <div className="flex flex-wrap gap-2">
               {popularTopics.map((topic) => (
                 <button
                   key={topic}
                   onClick={() => handleTopicClick(topic)}
-                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors capitalize"
+                  className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-full text-sm hover:bg-green-100 hover:border-green-300 transition-all capitalize font-medium"
                 >
                   {topic}
                 </button>
@@ -76,9 +82,9 @@ export default function QuoteForm() {
 
           <div className="mt-6 space-y-4">
             {results.map((quote, i) => (
-              <div key={i} className="bg-white/80 p-4 border rounded-lg text-sm shadow-sm">
-                "{quote}"
-              </div>
+                <div key={i} className="bg-green-50/80 p-4 border border-green-200 rounded-lg text-sm shadow-sm">
+                  <p className="text-gray-700 italic">&ldquo;{quote}&rdquo;</p>
+                </div>
             ))}
           </div>
         </div>
