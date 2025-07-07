@@ -4,6 +4,3 @@
 - Displays 3 quotes from local JSON/array.
 - Deployed to Vercel.
 - Code in assignment-1/.
----
-
-*Built with ❤️ using Next.js and ShadCN UI*
