@@ -2,6 +2,13 @@
 
 A beautiful and inspiring quote generator built with Next.js and ShadCN UI that helps users discover meaningful quotes based on various life topics.
 
+## 🚀 How to Use
+
+1. **Type a topic** in the search box (e.g., "success", "happiness", "wisdom")
+2. **Click "Get Quotes"** or select from popular topics below
+3. **View 3 inspiring quotes** related to your chosen topic
+4. **Try different topics** to discover new quotes!
+
 
 ## 🏷️ Available Topics
 
