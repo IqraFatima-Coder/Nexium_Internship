@@ -113,6 +113,7 @@ export function validateBlogUrl(url: string): { valid: boolean; message?: string
     
     return { valid: true };
     
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return {
       valid: false,
