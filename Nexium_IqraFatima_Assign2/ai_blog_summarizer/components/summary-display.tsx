@@ -21,10 +21,10 @@ interface Summary {
 interface SummaryDisplayProps {
   summary: Summary;
   onSave?: (summary: Summary) => Promise<void>;
-  isLoading?: boolean;
+  // Remove isLoading from props since it's not used
 }
 
-export function SummaryDisplay({ summary, onSave, isLoading }: SummaryDisplayProps) {
+export function SummaryDisplay({ summary, onSave }: SummaryDisplayProps) {
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -40,6 +40,7 @@ export function SummaryDisplay({ summary, onSave, isLoading }: SummaryDisplayPro
     }
   };
 
+  // ...rest of the component remains the same...
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8">
       {/* Header Card */}

@@ -1,4 +1,6 @@
-import { generateSummary, assessContentQuality } from './translate';
+// Remove unused import
+// import { generateSummary, assessContentQuality } from './translate';
+import { assessContentQuality } from './translate';
 
 export interface ScrapedContent {
   title: string;
@@ -54,16 +56,16 @@ export async function scrapeWebContent(url: string): Promise<ScrapedContent> {
       quality: quality
     };
     
-  } catch (error) {
-    console.error('Scraping error:', error);
+  } catch (err) {
+    console.error('Scraping error:', err);
     
     // Provide user-friendly error messages
-    if (error instanceof TypeError && error.message.includes('Invalid URL')) {
+    if (err instanceof TypeError && err.message.includes('Invalid URL')) {
       throw new Error('Please enter a valid URL starting with http:// or https://');
     }
     
-    if (error instanceof Error) {
-      throw error; // Re-throw with original message
+    if (err instanceof Error) {
+      throw err; // Re-throw with original message
     }
     
     throw new Error('Unable to process the webpage. Please try a different URL.');
