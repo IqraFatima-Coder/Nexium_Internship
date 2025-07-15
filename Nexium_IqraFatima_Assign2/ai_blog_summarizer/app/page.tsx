@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BlogForm } from "@/components/blog-form";
 import { SummaryDisplay } from "@/components/summary-display";
-import { scrapeWebContent , validateBlogUrl } from "@/lib/scraper";
+import { scrapeWebContent } from "@/lib/scraper";
 import { generateSummary, translateToUrdu } from "@/lib/translate";
 import { createClient } from "@/lib/supabase/client";
 import { AlertCircle, CheckCircle2, Sparkles } from "lucide-react";
@@ -24,20 +24,48 @@ export default function Home() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [dbConnected, setDbConnected] = useState(false);
+
+  // This will be useful for database setup verification
+  useEffect(() => {
+    async function verifyDatabaseConnection() {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('summaries')
+          .select('count')
+          .single();
+
+        if (error) {
+          console.error('Database connection failed:', error.message);
+          setError('Database connection failed. Please check your configuration.');
+          setDbConnected(false);
+          return;
+        }
+
+        setDbConnected(true);
+        console.log('Database connected successfully');
+      } catch (err) {
+        setError('Failed to initialize database connection');
+        setDbConnected(false);
+      }
+    }
+
+    verifyDatabaseConnection();
+  }, []);
 
   const handleSubmit = async (url: string) => {
+    if (!dbConnected) {
+      setError('Database connection not established. Please wait...');
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
     setSuccessMessage(null);
     setSummary(null);
     
     try {
-      // Validate URL format
-      const validation = validateBlogUrl(url);
-      if (!validation.valid) {
-        throw new Error(validation.message);
-      }
-      
       // Step 1: Scrape content
       setSuccessMessage("Scraping content from the webpage...");
       const scrapedContent = await scrapeWebContent(url);
@@ -179,7 +207,6 @@ export default function Home() {
           <SummaryDisplay 
             summary={summary} 
             onSave={handleSave}
-           
           />
         )}
         
