@@ -18,13 +18,15 @@ interface Summary {
   isSaved?: boolean;
 }
 
+
 interface SummaryDisplayProps {
   summary: Summary;
   onSave?: (summary: Summary) => Promise<void>;
-  // Remove isLoading from props since it's not used
+ 
 }
 
-export function SummaryDisplay({ summary, onSave }: SummaryDisplayProps) {
+
+export function SummaryDisplay({ summary, onSave}: SummaryDisplayProps) {
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
