@@ -31,7 +31,7 @@ export default function Home() {
     async function verifyDatabaseConnection() {
       try {
         const supabase = createClient();
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('summaries')
           .select('count')
           .single();
@@ -45,7 +45,7 @@ export default function Home() {
 
         setDbConnected(true);
         console.log('Database connected successfully');
-      } catch (err) {
+      } catch (_error) {
         setError('Failed to initialize database connection');
         setDbConnected(false);
       }
