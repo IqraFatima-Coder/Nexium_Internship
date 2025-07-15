@@ -179,7 +179,7 @@ export default function Home() {
           <SummaryDisplay 
             summary={summary} 
             onSave={handleSave}
-            isLoading={isLoading}
+           
           />
         )}
         
