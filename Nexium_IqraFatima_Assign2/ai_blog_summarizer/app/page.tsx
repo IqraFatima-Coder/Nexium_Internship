@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { BlogForm } from "@/components/blog-form";
 import { SummaryDisplay } from "@/components/summary-display";
-import { scrapeWebContent } from "@/lib/scraper";
+import { scrapeWebContent , validateBlogUrl } from "@/lib/scraper";
 import { generateSummary, translateToUrdu } from "@/lib/translate";
 import { createClient } from "@/lib/supabase/client";
 import { AlertCircle, CheckCircle2, Sparkles } from "lucide-react";
