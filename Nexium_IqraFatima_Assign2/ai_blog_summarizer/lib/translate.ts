@@ -27,7 +27,7 @@ const translationDictionary: Record<string, string> = {
   "customer": "گاہک", "service": "خدمت", "product": "پروڈکٹ", "brand": "برانڈ",
   "marketing": "مارکیٹنگ", "sales": "فروخت", "revenue": "آمدنی", "strategy": "حکمت عملی",
   "management": "انتظام", "leadership": "قیادت", "team": "ٹیم", "project": "منصوبہ",
-  "startup": "نئی کمپنی", "entrepreneur": "کاروباری", "innovation": "جدت",
+  "startup": "نئی کمپنی", "entrepreneur": "کاروباری", 
   
   // Education and knowledge
   "education": "تعلیم", "school": "اسکول", "university": "یونیورسٹی", "college": "کالج",

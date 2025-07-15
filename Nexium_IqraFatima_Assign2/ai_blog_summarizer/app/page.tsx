@@ -5,7 +5,7 @@ import { BlogForm } from "@/components/blog-form";
 import { SummaryDisplay } from "@/components/summary-display";
 import { scrapeWebContent } from "@/lib/scraper";
 import { generateSummary, translateToUrdu } from "@/lib/translate";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from '@/lib/supabase/client'
 import { AlertCircle, CheckCircle2, Sparkles } from "lucide-react";
 
 interface Summary {
@@ -119,11 +119,12 @@ export default function Home() {
     }
   };
 
+  // Create Supabase client instance when needed
   const handleSave = async (summaryToSave: Summary) => {
     try {
       // Save to Supabase
       const supabase = createClient();
-      const { data, error: supabaseError } = await supabase
+      const { data: supabaseData, error: supabaseError } = await supabase
         .from('summaries')
         .insert({
           original_url: summaryToSave.originalUrl,
@@ -134,26 +135,29 @@ export default function Home() {
         })
         .select()
         .single();
-      
-      if (supabaseError) {
-        throw new Error('Failed to save summary to database');
+
+      if (supabaseError) throw supabaseError;
+
+      // Save to MongoDB
+      const mongoResponse = await fetch('/api/save-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: summaryToSave.originalUrl,
+          content: summaryToSave.fullContent,
+        }),
+      });
+
+      if (!mongoResponse.ok) {
+        throw new Error('Failed to save to MongoDB');
       }
-      
-      // Update summary with saved data
-      const savedSummary: Summary = {
-        ...summaryToSave,
-        id: data.id,
-        createdAt: data.created_at,
-        isSaved: true
-      };
-      
-      setSummary(savedSummary);
-      setSuccessMessage("Summary saved successfully to database!");
-      setError(null);
-      
-    } catch (err) {
-      console.error('Error saving summary:', err);
-      setError(err instanceof Error ? err.message : 'Failed to save summary');
+
+      return supabaseData;
+    } catch (error) {
+      console.error('Error saving data:', error);
+      throw error;
     }
   };
 
