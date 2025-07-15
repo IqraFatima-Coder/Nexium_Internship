@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
         'Accept-Encoding': 'gzip, deflate',
         'Connection': 'keep-alive',
       },
-      timeout: 10000 // 10 second timeout
+     signal: controller.signal,
     });
     
     if (!response.ok) {
