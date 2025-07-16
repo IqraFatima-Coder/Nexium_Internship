@@ -10,109 +10,87 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const urlObj = new URL(url);
-
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate',
-        'Connection': 'keep-alive',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
       },
-      signal: AbortSignal.timeout(10000),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10000)
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    const html = await response.text();
+    
+    // Check if response is HTML
+    if (!html.includes('<!DOCTYPE') && !html.includes('<html')) {
+      throw new Error('Invalid webpage content received');
     }
 
-    const html = await response.text();
     const $ = cheerio.load(html);
 
-    // Extract title
-    let title =
-      $('title').first().text() ||
-      $('h1').first().text() ||
-      $('meta[property="og:title"]').attr('content') ||
-      $('meta[name="twitter:title"]').attr('content') ||
-      'Blog Post';
+    // Remove unwanted elements
+    $('script, style, nav, header, footer, .ads, .comments, iframe').remove();
 
-    title = title.trim().replace(/\s+/g, ' ');
+    // Get title
+    const title = $('title').first().text() || 
+                 $('h1').first().text() || 
+                 'Untitled Article';
 
+    // Get main content
     let content = '';
-
-    const articleSelectors = [
-      'article',
-      '.post-content',
-      '.entry-content',
-      '.content',
-      '.post-body',
-      '.article-content',
-      '.blog-content',
-      '.main-content',
-      '#content',
-      '.container .content',
+    const mainSelectors = [
+      'article', 
       '[role="main"]',
+      '.post-content',
+      '.article-content',
+      '.entry-content',
+      'main',
+      '#main-content'
     ];
 
-    for (const selector of articleSelectors) {
+    // Try each selector until we find content
+    for (const selector of mainSelectors) {
       const element = $(selector);
-      if (element.length && element.text().trim().length > 200) {
-        content = element.text();
-        break;
+      if (element.length) {
+        content = element.text().trim();
+        if (content.length > 100) break;
       }
     }
 
-    if (!content || content.length < 200) {
-      const paragraphs = $('p').map((i, el) => $(el).text().trim()).get();
-      content = paragraphs.filter(p => p.length > 50).join(' ');
+    // Fallback to paragraphs if no content found
+    if (content.length < 100) {
+      content = $('p').map((_, el) => $(el).text().trim())
+        .get()
+        .filter(text => text.length > 20)
+        .join('\n\n');
     }
 
-    if (!content || content.length < 200) {
-      $('script, style, nav, header, footer, aside, .sidebar, .menu, .navigation').remove();
-      content = $('body').text();
-    }
-
+    // Clean up content
     content = content
       .replace(/\s+/g, ' ')
-      .replace(/\n+/g, ' ')
-      .trim()
-      .replace(/Subscribe.*?newsletter/gi, '')
-      .replace(/Follow us on.*?social/gi, '')
-      .replace(/Click here.*?more/gi, '')
-      .replace(/Read more.*?article/gi, '')
-      .replace(/Share this.*?post/gi, '');
+      .replace(/\n+/g, '\n')
+      .trim();
 
     if (!content || content.length < 100) {
       throw new Error('Could not extract meaningful content from the webpage');
     }
 
-    if (content.length > 5000) {
-      content = content.substring(0, 5000) + '...';
-    }
-
     return NextResponse.json({
-      title,
+      title: title.trim(),
       content,
-      wordCount: content.split(' ').length,
       url,
-      domain: urlObj.hostname,
     });
 
   } catch (error) {
     console.error('Scraping error:', error);
-
-    const isAbort = error instanceof Error && error.name === 'AbortError';
-
-    return NextResponse.json({
-      error: isAbort
-        ? 'Request timed out after 10 seconds.'
-        : 'Failed to scrape content from the provided URL',
-      details: error instanceof Error ? error.message : 'Unknown error',
-      suggestion: isAbort
-        ? 'Try a different blog or check your internet connection.'
-        : 'Please ensure the URL is a valid blog post or article.',
-    }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to scrape content',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { 
+      status: 500 
+    });
   }
 }
