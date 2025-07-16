@@ -12,9 +12,10 @@ export async function POST(req: NextRequest) {
 
     // Parse request body
     const body = await req.json();
-    console.log('Received request body:', {
+    console.log('Request body received:', {
       hasUrl: !!body.url,
       contentLength: body.content?.length,
+      url: body.url,
     });
 
     const { url, content } = body;
@@ -30,19 +31,44 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Verify existing content
+    const existingContent = await BlogContent.findOne({ url });
+    if (existingContent) {
+      console.log('Content already exists for URL:', url);
+    }
+
     // Create new document
     console.log('Creating new BlogContent document...');
     const blogContent = await BlogContent.create({
       url,
       content,
+      createdAt: new Date(),
     });
 
     console.log('Document created successfully:', {
       id: blogContent._id,
       url: blogContent.url,
+      contentLength: blogContent.content.length,
+      createdAt: blogContent.createdAt,
     });
 
-    return NextResponse.json(blogContent, { status: 201 });
+    // Verify the save by reading it back
+    const savedContent = await BlogContent.findById(blogContent._id);
+    console.log('Verified saved content:', {
+      found: !!savedContent,
+      id: savedContent?._id,
+      contentLength: savedContent?.content.length,
+    });
+
+    return NextResponse.json(
+      {
+        success: true,
+        id: blogContent._id,
+        url: blogContent.url,
+        createdAt: blogContent.createdAt,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('MongoDB save error:', error);
     return NextResponse.json(

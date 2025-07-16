@@ -1,30 +1,44 @@
-import mongoose from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 
-// Define the interface for the blog content
-interface IBlogContent {
+interface IBlogContent extends Document {
   url: string;
   content: string;
   createdAt: Date;
+  title?: string;
+  summary?: string;
 }
 
-// Define the schema
-const blogContentSchema = new mongoose.Schema<IBlogContent>({
+const blogContentSchema: Schema = new Schema({
   url: {
     type: String,
     required: true,
     unique: true,
+    trim: true
   },
   content: {
     type: String,
-    required: true,
+    required: true
   },
   createdAt: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
+  title: {
+    type: String,
+    trim: true
+  },
+  summary: {
+    type: String,
+    trim: true
+  }
+}, {
+  timestamps: true
 });
 
-// Create and export the model
+// Add indexes for better query performance
+blogContentSchema.index({ url: 1 });
+blogContentSchema.index({ createdAt: -1 });
+
 const BlogContent = mongoose.models.BlogContent || mongoose.model<IBlogContent>('BlogContent', blogContentSchema);
 
 export default BlogContent;
