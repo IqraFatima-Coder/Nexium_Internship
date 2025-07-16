@@ -89,6 +89,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       error: 'Failed to scrape the provided URL.',
       details: errorMessage,
-    }, { status: 500 });s: 500 });
+    }, { status: 500 });
   }
 }
