@@ -11,17 +11,14 @@ export async function GET(request: NextRequest) {
 
   try {
     // Add delay to avoid rate limiting
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
       },
-      cache: 'no-store',
       next: { revalidate: 0 }
     });
 
@@ -29,13 +26,16 @@ export async function GET(request: NextRequest) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const html = await response.text();
-    
-    // Verify we got HTML
-    if (!html.includes('<!DOCTYPE') && !html.includes('<html')) {
-      console.error('Invalid response:', html.substring(0, 100));
-      throw new Error('Invalid HTML response');
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('text/html')) {
+      throw new Error('Response is not HTML');
     }
+
+    const html = await response.text();
+
+    // Debug log
+    console.log('Received content type:', contentType);
+    console.log('Content preview:', html.substring(0, 100));
 
     const $ = cheerio.load(html);
 
@@ -47,19 +47,23 @@ export async function GET(request: NextRequest) {
                  $('h1').first().text() || 
                  'Untitled Article';
 
-    // Try multiple selectors for content
-    const selectors = [
+    // Get main content
+    let content = '';
+    
+    // Try different content selectors
+    const mainSelectors = [
       'article',
       '[role="main"]',
       '.post-content',
       '.article-content',
       '.entry-content',
       'main',
-      '#main-content'
+      '#main-content',
+      '.blog-post',
+      '.post-body'
     ];
 
-    let content = '';
-    for (const selector of selectors) {
+    for (const selector of mainSelectors) {
       const element = $(selector);
       if (element.length) {
         content = element.text().trim();
@@ -75,20 +79,20 @@ export async function GET(request: NextRequest) {
         .join('\n\n');
     }
 
-    if (!content) {
-      throw new Error('No content found');
-    }
-
     // Clean up content
     content = content
       .replace(/\s+/g, ' ')
       .replace(/\n+/g, '\n')
       .trim();
 
+    if (!content || content.length < 100) {
+      throw new Error('Could not extract meaningful content from the webpage');
+    }
+
     return NextResponse.json({
-      title,
+      title: title.trim(),
       content,
-      url
+      url,
     }, {
       headers: {
         'Access-Control-Allow-Origin': '*',
