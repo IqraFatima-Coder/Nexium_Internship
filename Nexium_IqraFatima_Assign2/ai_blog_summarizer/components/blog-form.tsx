@@ -23,9 +23,9 @@ export function BlogForm({ onSubmit, isLoading }: BlogFormProps) {
   };
 
   const exampleUrls = [
-    "https://blog.vercel.com/",
-    "https://nextjs.org/blog/",
-    "https://openai.com/blog/"
+    "https://blog.vercel.com/posts/react-19",
+    "https://nextjs.org/blog/next-14-2",
+    "https://www.builder.io/blog/structured-data-for-ai"
   ];
 
   const fillExample = (exampleUrl: string) => {
@@ -34,102 +34,76 @@ export function BlogForm({ onSubmit, isLoading }: BlogFormProps) {
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
-      <Card className="relative overflow-hidden border-2 border-primary/10 bg-gradient-to-br from-background via-primary/5 to-secondary/10">
-        {/* Background decoration */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/20 to-transparent rounded-bl-full" />
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-secondary/20 to-transparent rounded-tr-full" />
-        
-        <CardHeader className="relative space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Sparkles className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-2xl bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                AI Blog Summarizer
-              </CardTitle>
-              <CardDescription className="text-base">
-                Transform lengthy blog posts into concise summaries in English and Urdu
-              </CardDescription>
-            </div>
+      <Card className="relative overflow-hidden border-2 border-primary/10 shadow-lg">
+        <CardHeader className="relative space-y-4 text-center">
+          <div className="inline-block mx-auto p-3 bg-primary/10 rounded-full">
+            <Sparkles className="h-8 w-8 text-primary" />
           </div>
-          
-          {/* Features */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Globe className="h-4 w-4 text-blue-500" />
-              <span>Web Scraping</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Zap className="h-4 w-4 text-green-500" />
-              <span>AI Summarization</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Sparkles className="h-4 w-4 text-purple-500" />
-              <span>Urdu Translation</span>
-            </div>
-          </div>
+          <CardTitle className="text-3xl font-bold">
+            Summarize Any Article
+          </CardTitle>
+          <CardDescription className="text-lg">
+            Just paste the URL of a blog post or news article below.
+          </CardDescription>
         </CardHeader>
-        
-        <CardContent className="relative space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="blog-url" className="text-base font-medium">
+              <Label htmlFor="url-input" className="sr-only">
                 Blog URL
               </Label>
               <div className="relative">
+                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
-                  id="blog-url"
+                  id="url-input"
                   type="url"
-                  placeholder="https://example.com/blog-post"
+                  placeholder="https://example.com/blog/my-awesome-post"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   required
+                  className="pl-10 h-12 text-base"
                   disabled={isLoading}
-                  className="h-12 text-base border-2 focus:border-primary/50 transition-colors"
                 />
-                <Globe className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               </div>
             </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full h-12 text-base font-medium bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200" 
-              disabled={isLoading || !url.trim()}
+            <Button
+              type="submit"
+              className="w-full h-12 text-lg font-semibold"
+              disabled={isLoading}
             >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Processing Blog...
+                  Processing...
                 </>
               ) : (
                 <>
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Summarize Blog
+                  <Zap className="mr-2 h-5 w-5" />
+                  Generate Summary
                 </>
               )}
             </Button>
           </form>
-          
-          {/* Example URLs */}
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-muted-foreground">Try these examples:</p>
-            <div className="flex flex-wrap gap-2">
-              {exampleUrls.map((exampleUrl, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fillExample(exampleUrl)}
-                  disabled={isLoading}
-                  className="text-xs hover:bg-primary/10 hover:border-primary/30 transition-colors"
-                >
-                  {exampleUrl.replace('https://', '').replace('/', '')}
-                </Button>
-              ))}
-            </div>
-          </div>
         </CardContent>
+        <div className="flex flex-col items-start gap-4 p-4 border-t border-primary/10">
+          <p className="text-sm text-muted-foreground font-medium">
+            Or try one of these examples:
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {exampleUrls.map((exampleUrl) => (
+              <Button
+                key={exampleUrl}
+                variant="outline"
+                size="sm"
+                onClick={() => fillExample(exampleUrl)}
+                disabled={isLoading}
+                className="text-xs"
+              >
+                {new URL(exampleUrl).pathname.slice(1, 30)}...
+              </Button>
+            ))}
+          </div>
+        </div>
       </Card>
     </div>
   );

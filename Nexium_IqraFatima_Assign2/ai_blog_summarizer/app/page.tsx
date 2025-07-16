@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import { BlogForm } from "@/components/blog-form";
 import { SummaryDisplay } from "@/components/summary-display";
-import { scrapeWebContent } from "@/lib/scraper";
 import { generateSummary, translateToUrdu } from "@/lib/translate";
 import { createClient } from '@/lib/supabase/client'
-import { AlertCircle, CheckCircle2, Sparkles } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { Hero } from "@/components/hero";
 
 interface Summary {
   id?: string;
@@ -59,8 +59,10 @@ export default function Home() {
     setIsLoading(true);
     setError(null);
     setSummary(null);
+    setSuccessMessage(null);
 
     try {
+      setSuccessMessage("Scraping content from the webpage...");
       const scrapeResponse = await fetch(`/api/scrape?url=${encodeURIComponent(url)}`);
       
       if (!scrapeResponse.ok) {
@@ -161,28 +163,17 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <main className="min-h-screen bg-white">
+      <Hero />
       <div className="container mx-auto max-w-7xl p-6 space-y-12">
-        {/* Header */}
-        <div className="text-center space-y-6 pt-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full">
-              <Sparkles className="h-8 w-8 text-primary" />
-            </div>
-          </div>
-          <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-            AI Blog Summarizer
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Transform lengthy blog posts into concise, intelligent summaries in both English and Urdu using advanced AI technology
-          </p>
-        </div>
         
         {/* Form */}
-        <BlogForm onSubmit={handleSubmit} isLoading={isLoading} />
+        <div id="summarize-form" className="pt-12">
+          <BlogForm onSubmit={handleSubmit} isLoading={isLoading} />
+        </div>
         
         {/* Success Message */}
-        {successMessage && (
+        {successMessage && !summary && (
           <div className="max-w-4xl mx-auto">
             <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
               <div className="flex items-center gap-3">
