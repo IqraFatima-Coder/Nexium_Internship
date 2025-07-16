@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
 
 export async function GET(request: NextRequest) {
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     }
 
     const html = await response.text();
-
+    
     // Verify we got HTML
     if (!html.includes('<!DOCTYPE') && !html.includes('<html')) {
       console.error('Invalid response:', html.substring(0, 100));
