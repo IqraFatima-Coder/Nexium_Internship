@@ -54,21 +54,29 @@ export default function Home() {
     verifyDatabaseConnection();
   }, []);
 
+  // Update your handleSubmit function with better error handling
   const handleSubmit = async (url: string) => {
-    if (!dbConnected) {
-      setError('Database connection not established. Please wait...');
-      return;
-    }
-    
     setIsLoading(true);
     setError(null);
-    setSuccessMessage(null);
     setSummary(null);
-    
+
     try {
+      const scrapeResponse = await fetch(`/api/scrape?url=${encodeURIComponent(url)}`);
+      
+      if (!scrapeResponse.ok) {
+        const errorData = await scrapeResponse.json();
+        throw new Error(errorData.details || 'Failed to scrape content');
+      }
+
+      const data = await scrapeResponse.json();
+      
+      if (!data.content) {
+        throw new Error('No content found on the webpage');
+      }
+
       // Step 1: Scrape content
       setSuccessMessage("Scraping content from the webpage...");
-      const scrapedContent = await scrapeWebContent(url);
+      const scrapedContent = data;
       
       // Check content quality
       if (scrapedContent.quality && scrapedContent.quality.score < 50) {
@@ -102,18 +110,9 @@ export default function Home() {
       setSummary(newSummary);
       setSuccessMessage("Summary completed successfully! Click 'Save Summary' to store it in the database.");
       
-    } catch (err) {
-      console.error('Error processing blog:', err);
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-      
-      // Provide helpful suggestions based on error type
-      if (errorMessage.includes('fetch') || errorMessage.includes('network')) {
-        setError(`Network error: ${errorMessage}. Please check your internet connection and try again.`);
-      } else if (errorMessage.includes('content') || errorMessage.includes('scrape')) {
-        setError(`Content error: ${errorMessage}. Try a different blog post or news article.`);
-      } else {
-        setError(errorMessage);
-      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to process URL');
+      console.error('Error:', error);
     } finally {
       setIsLoading(false);
     }
