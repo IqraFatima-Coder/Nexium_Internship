@@ -45,25 +45,29 @@ const parseHtmlAndExtractContent = (html: string, url: string) => {
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const url = searchParams.get('url');
-  const apiKey = process.env.SCRAPINGBEE_API_KEY;
 
   if (!url) {
     return NextResponse.json({ error: 'URL parameter is required.' }, { status: 400 });
   }
 
-  if (!apiKey) {
-    console.error('CRITICAL: SCRAPINGBEE_API_KEY environment variable is not set.');
-    return NextResponse.json({ error: 'Scraping service is not configured on the server.' }, { status: 500 });
-  }
-
-  console.log(`Attempting to scrape URL: ${url} with ScrapingBee...`);
+  console.log(`Attempting to scrape URL: ${url} using direct Axios + Cheerio approach`);
 
   try {
-    // Construct the ScrapingBee URL for a powerful request
-    const scraperUrl = `https://app.scrapingbee.com/api/v1/?api_key=${apiKey}&url=${encodeURIComponent(url)}&render_js=true&premium_proxy=true`;
+    // Set appropriate headers to mimic a browser
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Referer': 'https://www.google.com/',
+      'Connection': 'keep-alive'
+    };
 
-    // Make the request using axios
-    const response = await axios.get(scraperUrl, { timeout: 110000 }); // 110-second timeout
+    // Make the direct request using axios
+    const response = await axios.get(url, { 
+      headers, 
+      timeout: 30000,
+      maxRedirects: 5
+    });
 
     // Parse the HTML response and extract content
     const result = parseHtmlAndExtractContent(response.data, url);
@@ -76,12 +80,30 @@ export async function GET(request: NextRequest) {
     console.error('SCRAPING FAILED:', errorMessage);
     
     // Check if the error is from axios to provide more specific details
-    if (axios.isAxiosError(error) && error.response) {
-        console.error('Axios response error:', error.response.data);
+    if (axios.isAxiosError(error)) {
+      // Provide more specific error based on response status
+      if (error.response) {
+        // Server responded with non-200 status
+        console.error(`Server error ${error.response.status}: ${error.response.statusText}`);
+        
+        if (error.response.status === 403) {
+          return NextResponse.json({
+            error: 'Access to this website is forbidden.',
+            details: 'This website may be blocking web scraping. Try another URL.',
+          }, { status: 403 });
+        }
+        
         return NextResponse.json({
-            error: 'The scraping service returned an error.',
-            details: `Status ${error.response.status}: ${error.response.statusText}`,
-        }, { status: 500 });
+          error: 'Failed to access the website.',
+          details: `The server returned status ${error.response.status}: ${error.response.statusText}`,
+        }, { status: 502 });
+      } else if (error.request) {
+        // Request made but no response received
+        return NextResponse.json({
+          error: 'Website did not respond.',
+          details: 'The request was sent but no response was received. The website may be down.',
+        }, { status: 504 });
+      }
     }
 
     return NextResponse.json({
