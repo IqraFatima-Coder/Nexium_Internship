@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { BlogForm } from "@/components/blog-form";
 import { SummaryDisplay } from "@/components/summary-display";
 import { generateSummary, translateToUrdu } from "@/lib/translate";
@@ -24,35 +25,6 @@ export default function Home() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [dbConnected, setDbConnected] = useState(false);
-
-  // This will be useful for database setup verification
-  useEffect(() => {
-    async function verifyDatabaseConnection() {
-      try {
-        const supabase = createClient();
-        const { error } = await supabase
-          .from('summaries')
-          .select('count')
-          .single();
-
-        if (error) {
-          console.error('Database connection failed:', error.message);
-          setError('Database connection failed. Please check your configuration.');
-          setDbConnected(false);
-          return;
-        }
-
-        setDbConnected(true);
-        console.log('Database connected successfully');
-      } catch (_error) {
-        setError('Failed to initialize database connection');
-        setDbConnected(false);
-      }
-    }
-
-    verifyDatabaseConnection();
-  }, []);
 
   // Update your handleSubmit function with better error handling
   const handleSubmit = async (url: string) => {
@@ -120,8 +92,11 @@ export default function Home() {
     }
   };
 
-  // Create Supabase client instance when needed
   const handleSave = async (summaryToSave: Summary) => {
+    const toastId = toast.loading("Saving summary...", {
+      description: "Storing data in Supabase and MongoDB.",
+    });
+
     try {
       // Save to Supabase
       const supabase = createClient();
@@ -137,7 +112,7 @@ export default function Home() {
         .select()
         .single();
 
-      if (supabaseError) throw supabaseError;
+      if (supabaseError) throw new Error(`Supabase error: ${supabaseError.message}`);
 
       // Save to MongoDB
       const mongoResponse = await fetch('/api/save-content', {
@@ -152,12 +127,25 @@ export default function Home() {
       });
 
       if (!mongoResponse.ok) {
-        throw new Error('Failed to save to MongoDB');
+        const errorData = await mongoResponse.json();
+        throw new Error(`MongoDB error: ${errorData.error || 'Failed to save content'}`);
       }
+      
+      toast.success("Summary saved successfully!", {
+        id: toastId,
+        description: "Your summary is now stored in our databases.",
+      });
 
-      return supabaseData;
+      // Update the summary state to reflect the saved state
+      setSummary(prev => prev ? { ...prev, isSaved: true, id: supabaseData.id } : null);
+
     } catch (error) {
       console.error('Error saving data:', error);
+      toast.error("Failed to save summary.", {
+        id: toastId,
+        description: error instanceof Error ? error.message : "An unknown error occurred.",
+      });
+      // Re-throw the error to be caught by the calling component if needed
       throw error;
     }
   };
@@ -198,18 +186,10 @@ export default function Home() {
         
         {/* Summary Display */}
         {summary && (
-          <SummaryDisplay 
-            summary={summary} 
-            onSave={handleSave}
-          />
+          <div className="max-w-6xl mx-auto">
+            <SummaryDisplay summary={summary} onSave={handleSave} />
+          </div>
         )}
-        
-        {/* Footer */}
-        <div className="text-center pt-12 pb-6">
-          <p className="text-sm text-muted-foreground">
-            Powered by Next.js, Supabase, and ShadCN UI
-          </p>
-        </div>
       </div>
     </main>
   );

@@ -1,88 +1,105 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
+import axios from 'axios'; // Using axios as requested
 
-export const maxDuration = 60; // Give it up to 60 seconds to run
+export const maxDuration = 120; // Increased duration for robust scraping
+
+// Helper function to parse HTML content, remains the same
+const parseHtml = (html: string, url: string) => {
+  if (!html || typeof html !== 'string' || !html.includes('<html')) {
+    throw new Error('Invalid or empty HTML content received.');
+  }
+
+  const $ = cheerio.load(html);
+  $('script, style, nav, footer, header, aside, .ads, iframe, link, meta, noscript').remove();
+  const title = $('title').first().text().trim() || $('h1').first().text().trim() || 'Untitled';
+
+  let bestContent = '';
+  $('article, main, .post, .story, [role="main"]').each((i, element) => {
+    const elementText = $(element).text().trim();
+    if (elementText.length > bestContent.length) {
+      bestContent = elementText;
+    }
+  });
+
+  if (bestContent.length < 200) {
+    bestContent = $('body').text().trim();
+  }
+
+  const content = bestContent.replace(/\s\s+/g, ' ').trim();
+
+  if (content.length < 100) {
+    throw new Error('Could not extract sufficient readable content from the page.');
+  }
+
+  return { title, content, url };
+};
+
+// --- Scraping Services using AXIOS ---
+
+// Service 1: ScrapingBee with axios
+const scrapeWithScrapingBee = async (url: string, apiKey: string) => {
+  console.log('Attempting to scrape with ScrapingBee using axios...');
+  const scraperUrl = `https://app.scrapingbee.com/api/v1/?api_key=${apiKey}&url=${encodeURIComponent(url)}&render_js=true&premium_proxy=true`;
+  const response = await axios.get(scraperUrl, { timeout: 110000 }); // 110-second timeout
+  return parseHtml(response.data, url);
+};
+
+// Service 2: ScrapingDog with axios
+const scrapeWithScrapingDog = async (url: string, apiKey: string) => {
+  console.log('Attempting to scrape with ScrapingDog using axios...');
+  const scraperUrl = `https://api.scrapingdog.com/scrape?api_key=${apiKey}&url=${encodeURIComponent(url)}&dynamic=true`;
+  const response = await axios.get(scraperUrl, { timeout: 110000 });
+  return parseHtml(response.data, url);
+};
+
+
+// --- Main API Route Handler ---
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const url = searchParams.get('url');
-  const apiKey = process.env.SCRAPINGBEE_API_KEY;
 
   if (!url) {
     return NextResponse.json({ error: 'URL parameter is required.' }, { status: 400 });
   }
 
-  // This is the most critical check for Vercel deployment
-  if (!apiKey) {
-    console.error('CRITICAL: SCRAPINGBEE_API_KEY environment variable is not set.');
+  const scrapingBeeApiKey = process.env.SCRAPINGBEE_API_KEY;
+  const scrapingDogApiKey = process.env.SCRAPINGDOG_API_KEY;
+
+  if (!scrapingBeeApiKey && !scrapingDogApiKey) {
+    console.error('CRITICAL: No scraping API keys are set in environment variables.');
     return NextResponse.json({ error: 'Scraping service is not configured on the server.' }, { status: 500 });
   }
 
-  console.log(`Attempting to scrape URL: ${url}`);
+  console.log(`Scraping URL: ${url}`);
 
-  try {
-    // Construct a more powerful ScrapingBee URL
-    // render_js=true -> Renders the page in a real browser
-    // premium_proxy=true -> Uses residential IPs, which are much harder to block
-    const scraperUrl = `https://app.scrapingbee.com/api/v1/?api_key=${apiKey}&url=${encodeURIComponent(url)}&render_js=true&premium_proxy=true`;
-
-    console.log('Fetching from ScrapingBee...');
-    const response = await fetch(scraperUrl, { next: { revalidate: 0 } });
-
-    // Detailed logging for debugging the response
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`ScrapingBee API responded with status ${response.status}: ${errorText}`);
-      throw new Error(`Scraping service failed. Status: ${response.status}.`);
+  // --- Try ScrapingBee First ---
+  if (scrapingBeeApiKey) {
+    try {
+      const result = await scrapeWithScrapingBee(url, scrapingBeeApiKey);
+      return NextResponse.json(result);
+    } catch (error) {
+      console.warn('ScrapingBee failed:', error instanceof Error ? error.message : String(error));
     }
-
-    const html = await response.text();
-
-    // Check if we got a valid HTML document
-    if (!html || !html.includes('<html')) {
-      console.error('Invalid or empty response received from scraping service. Response:', html.substring(0, 500));
-      throw new Error('Failed to retrieve valid HTML from the scraping service.');
-    }
-
-    console.log('Successfully received HTML. Parsing content...');
-    const $ = cheerio.load(html);
-
-    // Remove clutter
-    $('script, style, nav, footer, header, aside, .ads, iframe, link, meta, noscript').remove();
-
-    const title = $('title').first().text().trim() || $('h1').first().text().trim() || 'Untitled';
-
-    // Find the element with the most text, likely the main content
-    let bestContent = '';
-    $('article, main, .post, .story, [role="main"]').each((i, element) => {
-      const elementText = $(element).text().trim();
-      if (elementText.length > bestContent.length) {
-        bestContent = elementText;
-      }
-    });
-
-    // Fallback to the whole body if specific containers fail
-    if (bestContent.length < 200) {
-      bestContent = $('body').text().trim();
-    }
-
-    // Final cleanup of whitespace
-    const content = bestContent.replace(/\s\s+/g, ' ').trim();
-
-    if (content.length < 100) {
-      console.warn('Extracted content was very short. The page might be structured unusually.');
-      throw new Error('Could not extract sufficient readable content from the page.');
-    }
-
-    console.log(`Scraping successful for: ${title}`);
-    return NextResponse.json({ title, content, url });
-
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred during scraping.';
-    console.error('SCRAPING FAILED:', errorMessage);
-    return NextResponse.json({
-      error: 'Failed to process the URL.',
-      details: errorMessage,
-    }, { status: 500 });
   }
+
+  // --- Fallback to ScrapingDog ---
+  if (scrapingDogApiKey) {
+    try {
+      const result = await scrapeWithScrapingDog(url, scrapingDogApiKey);
+      return NextResponse.json(result);
+    } catch (error) {
+      console.error('ScrapingDog (fallback) also failed:', error instanceof Error ? error.message : String(error));
+      return NextResponse.json({
+        error: 'All scraping attempts failed.',
+        details: error instanceof Error ? error.message : 'An unknown error occurred.',
+      }, { status: 500 });
+    }
+  }
+  
+  return NextResponse.json({
+    error: 'Failed to process the URL with the configured scraping service.',
+    details: 'Primary scraping service failed, and no fallback is configured.',
+  }, { status: 500 });
 }
