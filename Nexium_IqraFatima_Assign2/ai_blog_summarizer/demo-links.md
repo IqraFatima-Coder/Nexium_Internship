@@ -1,24 +1,27 @@
 # Demo Links for Testing
 
-Here are some reliable blog URLs that work well with the Axios + Cheerio scraping approach:
+Here are reliable URLs that are very scraper-friendly and work well with Vercel deployments:
 
-## News and Articles
-- https://www.bbc.com/news/world-us-canada-66342309
-- https://medium.com/gitconnected/33-javascript-concepts-every-developer-should-know-a9b995a69baa
-- https://dev.to/jordienr/how-to-make-your-first-100k-online-4142
-- https://css-tricks.com/the-importance-of-heading-levels-for-assistive-technology/
+## Extremely Reliable Links (Try These First!)
+- https://example.com
+- https://webscraper.io/test-sites/e-commerce/allinone
+- https://quotes.toscrape.com
+- https://books.toscrape.com
 
-## Tech Blogs
-- https://blog.mozilla.org/en/mozilla/firefox-now-available-with-enhanced-tracking-protection-by-default/
-- https://github.blog/2023-06-01-introducing-github-copilot-x/
-- https://engineering.fb.com/2023/07/14/data-infrastructure/llama-2/
+## Simple Blogs and Documentation
+- https://blog.hubspot.com/website/html-space
+- https://developer.mozilla.org/en-US/docs/Web/HTML
+- https://www.browserstack.com/guide/robots-txt-file
+- https://vercel.com/guides/how-to-add-nextjs-metadata
 
-## Documentation
-- https://react.dev/learn/thinking-in-react
-- https://nextjs.org/docs/app/building-your-application/routing
+## Tech Articles
+- https://dev.to/edge-and-node/the-complete-guide-to-full-stack-web3-development-4g74
+- https://www.freecodecamp.org/news/what-is-web3
+- https://web.dev/articles/responsive-web-design-basics
 
-## Misc Articles
-- https://www.smashingmagazine.com/2023/02/guide-accessible-form-validation/
-- https://www.freecodecamp.org/news/how-to-learn-web-dev-in-2023/
+## Static Blog Sites
+- https://jamstack.org/what-is-jamstack/
+- https://blog.logrocket.com/product-management/what-is-a-product-roadmap/
+- https://blog.getbootstrap.com/2022/11/22/bootstrap-5-2-3/
 
-Note: While these links should work reliably, web content changes over time. If a link no longer works, try one of the others.
+Note: These links have been specifically selected for their scraper-friendliness and stability. If you encounter issues with one, please try another from the list.
