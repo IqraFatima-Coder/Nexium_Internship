@@ -399,9 +399,6 @@ grand_project/
 - [ ] Advanced search and filtering
 - [ ] Recipe recommendation engine
 
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
 ### Development Workflow
 1. Fork the repository
@@ -410,27 +407,11 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 4. Add tests if applicable
 5. Submit a pull request
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👥 Team
-
-**Project Lead**: Nexium Internship Program  
-**Developer**: PMLS  
-**Design**: NextMeal Team  
-
-## 📞 Support
-
-- **Documentation**: Check the `/docs` folder
-- **Issues**: Report bugs via GitHub Issues
-- **Questions**: Contact the development team
 
 ## 🙏 Acknowledgments
 
 - **Supabase** for the excellent backend-as-a-service
 - **Vercel** for hosting and deployment
-- **Shadcn** for the beautiful component library
 - **OpenAI** for AI recipe generation capabilities
 
 ---
