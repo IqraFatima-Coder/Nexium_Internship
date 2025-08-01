@@ -68,7 +68,7 @@ export function IngredientInput() {
     } catch (error) {
       console.error('Error adding ingredient:', error);
       // Show user-friendly error
-      alert(`Failed to add ingredient: ${error?.message || 'Unknown error'}`);
+      alert(`Failed to add ingredient: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -90,6 +90,24 @@ export function IngredientInput() {
       setIngredients(ingredients.filter(ing => ing !== ingredientToRemove));
     } catch (error) {
       console.error('Error removing ingredient:', error);
+    }
+  };
+
+  const clearAllIngredients = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('ingredients')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      
+      setIngredients([]);
+    } catch (error) {
+      console.error('Error clearing ingredients:', error);
     }
   };
 
@@ -117,31 +135,48 @@ export function IngredientInput() {
       <div className="border rounded-lg p-4 min-h-[200px]">
         {ingredients.length === 0 ? (
           <div className="text-center text-foreground/50 py-8">
-            <p>No ingredients added yet</p>
-            <p className="text-sm">Add ingredients to get started</p>
+            <p>🧾 No ingredients added yet</p>
+            <p className="text-sm">Add ingredients to get personalized recipes</p>
           </div>
         ) : (
-          <div className="flex flex-wrap gap-2">
-            {ingredients.map((ingredient, index) => (
-              <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                {ingredient}
-                <X 
-                  className="h-3 w-3 cursor-pointer hover:text-red-500" 
-                  onClick={() => removeIngredient(ingredient)}
-                />
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <h4 className="font-medium text-sm">My Ingredients ({ingredients.length})</h4>
+              <Badge variant="outline" className="text-xs">
+                Synced with database
               </Badge>
-            ))}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {ingredients.map((ingredient, index) => (
+                <Badge 
+                  key={index} 
+                  variant="secondary" 
+                  className="flex items-center gap-1 px-3 py-1 text-sm"
+                >
+                  🥕 {ingredient}
+                  <X 
+                    className="h-3 w-3 cursor-pointer hover:text-red-500 ml-1" 
+                    onClick={() => removeIngredient(ingredient)}
+                  />
+                </Badge>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={() => setIngredients([])}>
-          Clear All
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={clearAllIngredients}
+          disabled={ingredients.length === 0}
+        >
+          🗑️ Clear All
         </Button>
-        <Button variant="outline" size="sm">
-          Save Fridge
-        </Button>
+        <Badge variant="outline" className="flex items-center gap-1 px-3 py-1">
+          ✅ Auto-saved to database
+        </Badge>
       </div>
     </div>
   );

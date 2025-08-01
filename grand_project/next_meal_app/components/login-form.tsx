@@ -49,11 +49,24 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
+      {/* Brand Header */}
+      <div className="text-center mb-6">
+        <div className="flex justify-center items-center gap-3 mb-4">
+          <span className="text-4xl">🍲</span>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            NextMeal
+          </h1>
+        </div>
+        <p className="text-foreground/70 text-sm">
+          Your AI-powered recipe assistant
+        </p>
+      </div>
+      
+      <Card className="bg-white/90 backdrop-blur-sm border-white/20">
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardTitle className="text-2xl">Welcome Back</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Sign in to discover amazing recipes with your ingredients
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -97,9 +110,9 @@ export function LoginForm({
               Don&apos;t have an account?{" "}
               <Link
                 href="/auth/sign-up"
-                className="underline underline-offset-4"
+                className="underline underline-offset-4 font-medium text-primary hover:text-primary/80"
               >
-                Sign up
+                Join NextMeal
               </Link>
             </div>
           </form>

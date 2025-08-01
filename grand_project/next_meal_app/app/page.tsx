@@ -20,24 +20,24 @@ export default function Home() {
         <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">
           <Hero />
           <main className="flex-1 flex flex-col gap-6 px-4">
-            <h2 className="font-medium text-xl mb-4">Welcome to NextMeal</h2>
+            <h2 className="font-medium text-xl mb-4">Welcome to NextMeal 🍲</h2>
             {hasEnvVars ? (
               <div className="flex flex-col gap-4">
-                <p className="text-foreground/70">
-                  Transform your available ingredients into delicious recipes with AI-powered suggestions.
+                <p className="text-foreground/70 text-lg">
+                  Never wonder &quot;what&apos;s for dinner?&quot; again! Transform your available ingredients into delicious, personalized recipes with our AI-powered cooking assistant.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-semibold mb-2">🧾 Add Ingredients</h3>
-                    <p className="text-sm text-foreground/70">Input what's in your fridge</p>
+                  <div className="p-6 border rounded-lg hover:shadow-md transition-shadow">
+                    <h3 className="font-semibold mb-2 text-lg">🧾 Add Ingredients</h3>
+                    <p className="text-sm text-foreground/70">Input what&apos;s in your fridge and pantry</p>
                   </div>
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-semibold mb-2">🤖 AI Magic</h3>
-                    <p className="text-sm text-foreground/70">Get personalized recipe suggestions</p>
+                  <div className="p-6 border rounded-lg hover:shadow-md transition-shadow">
+                    <h3 className="font-semibold mb-2 text-lg">🤖 AI Magic</h3>
+                    <p className="text-sm text-foreground/70">Get multiple personalized recipe options</p>
                   </div>
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-semibold mb-2">🍽️ Cook & Enjoy</h3>
-                    <p className="text-sm text-foreground/70">Follow step-by-step instructions</p>
+                  <div className="p-6 border rounded-lg hover:shadow-md transition-shadow">
+                    <h3 className="font-semibold mb-2 text-lg">🍽️ Cook & Enjoy</h3>
+                    <p className="text-sm text-foreground/70">Save favorites and add to shopping list</p>
                   </div>
                 </div>
                 <div className="flex justify-center mt-8">
@@ -59,15 +59,7 @@ export default function Home() {
 
         <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
           <p>
-            Powered by{" "}
-            <a
-              href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-              target="_blank"
-              className="font-bold hover:underline"
-              rel="noreferrer"
-            >
-              Supabase
-            </a>
+            NextMeal - Your AI Recipe Assistant 🍲
           </p>
           <ThemeSwitcher />
         </footer>
