@@ -141,9 +141,9 @@ export function DashboardTabs() {
 
   return (
     <div className={`min-h-screen transition-all duration-700 ${getTabBackgroundClass(activeTab)} food-pattern`}>
-      <div className="space-y-6 backdrop-blur-sm bg-white/10 min-h-screen p-6">
+      <div className="space-y-6 backdrop-blur-sm bg-white/10 dark:bg-black/20 min-h-screen p-6">
         {/* Tab Navigation */}
-        <Card className="bg-white/80 backdrop-blur-md border-white/20">
+        <Card className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-white/20 dark:border-gray-700/30">
           <CardContent className="p-2">
           <div className="flex flex-wrap gap-2">
             {tabs.map((tab) => {
@@ -171,7 +171,7 @@ export function DashboardTabs() {
 
       {/* Tab Content */}
       <div className="min-h-[400px]">
-        <div className="bg-white/90 backdrop-blur-md rounded-lg border border-white/20 p-6">
+        <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-lg border border-white/20 dark:border-gray-700/30 p-6">
           {renderTabContent()}
         </div>
       </div>

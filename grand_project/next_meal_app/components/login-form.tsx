@@ -62,7 +62,7 @@ export function LoginForm({
         </p>
       </div>
       
-      <Card className="bg-white/90 backdrop-blur-sm border-white/20">
+      <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-white/20 dark:border-gray-700/30">
         <CardHeader>
           <CardTitle className="text-2xl">Welcome Back</CardTitle>
           <CardDescription>

@@ -9,6 +9,7 @@
   animation: gradient-shift 15s ease infinite;
 }
 
+/* Light Mode Gradients */
 .kitchen-gradient {
   background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
 }
@@ -29,18 +30,67 @@
   background: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%);
 }
 
+/* Dark Mode Gradients */
+.dark .food-pattern-bg {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+.dark .kitchen-gradient {
+  background: linear-gradient(135deg, #2d1b69 0%, #11998e 100%);
+}
+
+.dark .recipe-gradient {
+  background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);
+}
+
+.dark .saved-gradient {
+  background: linear-gradient(135deg, #232526 0%, #414345 100%);
+}
+
+.dark .shopping-gradient {
+  background: linear-gradient(135deg, #0c3483 0%, #a2b6df 100%);
+}
+
+.dark .profile-gradient {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+}
+
 @keyframes gradient-shift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
-/* Subtle food pattern overlay */
+/* Light Mode Food Pattern */
 .food-pattern {
   background-image: 
     radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.05) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.05) 0%, transparent 50%),
     radial-gradient(circle at 40% 40%, rgba(120, 219, 226, 0.05) 0%, transparent 50%);
+}
+
+/* Dark Mode Food Pattern */
+.dark .food-pattern {
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(14, 165, 233, 0.1) 0%, transparent 50%);
+}
+
+/* Enhanced Dark Mode Card Styles */
+.dark-card {
+  @apply bg-gray-900/90 border-gray-700/50 backdrop-blur-md;
+}
+
+.dark-glass {
+  @apply bg-black/20 backdrop-blur-md border-white/10;
+}
+
+/* Theme Transition */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 @layer base {
