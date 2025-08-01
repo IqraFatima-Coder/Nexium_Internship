@@ -62,28 +62,49 @@ export function RecipeGenerator() {
         throw new Error("Recipe generation service not configured");
       }
 
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: user.id,
-          ingredients,
-          appliances,
-          options: {
-            generate_multiple: true,
-            recipe_count: 3,
-            use_all_ingredients: false
-          }
-        }),
-      });
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-      if (!response.ok) {
-        throw new Error(`Failed to generate recipe: ${response.statusText}`);
+      try {
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            user_id: user.id,
+            ingredients,
+            appliances,
+            options: {
+              generate_multiple: true,
+              recipe_count: 3,
+              use_all_ingredients: false
+            }
+          }),
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`Failed to generate recipe: ${response.statusText}`);
+        }
+
+      // Check if response has content before parsing JSON
+      const responseText = await response.text();
+      if (!responseText || responseText.trim() === '') {
+        throw new Error('Empty response from recipe generation service');
       }
 
-      const result = await response.json();
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (error) {
+        console.error('Failed to parse JSON response:', responseText);
+        console.error('Parse error:', error);
+        throw new Error('Invalid JSON response from recipe generation service');
+      }
       
       console.log('n8n response:', result); // Debug log
       
@@ -147,8 +168,29 @@ export function RecipeGenerator() {
       
       setRecipes([...generatedRecipes, ...recipes]);
 
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        throw fetchError;
+      }
+
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate recipe');
+      let errorMessage = 'Failed to generate recipe';
+      
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          errorMessage = 'Recipe generation timed out. Please try again.';
+        } else if (err.message.includes('Empty response')) {
+          errorMessage = 'No response from recipe service. Please check your connection and try again.';
+        } else if (err.message.includes('Invalid JSON')) {
+          errorMessage = 'Recipe service returned invalid data. Please try again.';
+        } else if (err.message.includes('not configured')) {
+          errorMessage = 'Recipe generation service is not configured. Please contact support.';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
       console.error('Recipe generation error:', err);
     } finally {
       setIsGenerating(false);
@@ -430,8 +472,11 @@ export function RecipeGenerator() {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
-                    <div className="prose prose-sm max-w-none mt-4">
-                      {formatRecipeContent(recipe.content)}
+                    {/* Scrollable Recipe Content */}
+                    <div className="max-h-96 overflow-y-auto border rounded-lg p-4 bg-muted/20 mt-4">
+                      <div className="prose prose-sm max-w-none">
+                        {formatRecipeContent(recipe.content)}
+                      </div>
                     </div>
                     <div className="flex gap-2 mt-6 pt-4 border-t">
                       <Button 
@@ -514,8 +559,11 @@ export function RecipeGenerator() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="prose prose-sm max-w-none">
-                  {formatRecipeContent(recipe.content)}
+                {/* Scrollable Recipe Content */}
+                <div className="max-h-96 overflow-y-auto border rounded-lg p-4 bg-muted/20">
+                  <div className="prose prose-sm max-w-none">
+                    {formatRecipeContent(recipe.content)}
+                  </div>
                 </div>
                 <div className="flex gap-2 mt-6 pt-4 border-t">
                   <Button 

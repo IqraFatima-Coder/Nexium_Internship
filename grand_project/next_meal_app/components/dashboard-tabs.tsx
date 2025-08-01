@@ -3,15 +3,14 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChefHat, BookOpen, ShoppingCart, Settings, User } from "lucide-react";
+import { ChefHat, BookOpen, ShoppingCart, Settings } from "lucide-react";
 import { IngredientInput } from "@/components/ingredient-input";
 import { ApplianceSelector } from "@/components/appliance-selector";
 import { RecipeGenerator } from "@/components/recipe-generator";
 import { SavedRecipes } from "@/components/saved-recipes";
 import { ShoppingList } from "@/components/shopping-list";
-import { ProfileSettings } from "@/components/profile-settings";
 
-type TabType = "kitchen" | "generate" | "saved" | "shopping" | "profile";
+type TabType = "kitchen" | "generate" | "saved" | "shopping";
 
 export function DashboardTabs() {
   const [activeTab, setActiveTab] = useState<TabType>("kitchen");
@@ -40,12 +39,6 @@ export function DashboardTabs() {
       label: "Shopping List",
       icon: ShoppingCart,
       description: "Manage your shopping list"
-    },
-    {
-      id: "profile" as TabType,
-      label: "Profile",
-      icon: User,
-      description: "Edit your profile settings"
     }
   ];
 
@@ -112,17 +105,6 @@ export function DashboardTabs() {
           </div>
         );
 
-      case "profile":
-        return (
-          <div className="space-y-4">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Profile Settings</h1>
-              <p className="text-foreground/70">Manage your account and preferences</p>
-            </div>
-            <ProfileSettings />
-          </div>
-        );
-
       default:
         return null;
     }
@@ -134,7 +116,6 @@ export function DashboardTabs() {
       case "generate": return "recipe-gradient";  
       case "saved": return "saved-gradient";
       case "shopping": return "shopping-gradient";
-      case "profile": return "profile-gradient";
       default: return "";
     }
   };

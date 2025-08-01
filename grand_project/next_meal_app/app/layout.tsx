@@ -9,7 +9,7 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "NextMeal 🍲 - AI Recipe Generator",
+  title: "NextMeal - AI Recipe Generator",
   description: "Transform your ingredients into delicious recipes with AI-powered suggestions",
   icons: {
     icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🍲</text></svg>',

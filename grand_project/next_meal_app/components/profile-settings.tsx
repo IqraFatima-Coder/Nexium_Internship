@@ -8,7 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, User, Save } from "lucide-react";
 
-export function ProfileSettings() {
+interface ProfileSettingsProps {
+  onClose?: () => void;
+}
+
+export function ProfileSettings({ onClose }: ProfileSettingsProps) {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -58,6 +62,9 @@ export function ProfileSettings() {
 
       if (error) throw error;
       setSuccess("Profile updated successfully!");
+      if (onClose) {
+        setTimeout(() => onClose(), 1500); // Close after showing success message
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update profile");
     } finally {

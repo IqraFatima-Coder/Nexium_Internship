@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Loader2, BookOpen, Clock, Trash2, Share } from "lucide-react";
+import { Loader2, BookOpen, Clock, Trash2, Share, ShoppingCart } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 interface SavedRecipe {
@@ -26,6 +26,7 @@ export function SavedRecipes() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingRecipes, setDeletingRecipes] = useState<Set<string>>(new Set());
+  const [addingToShoppingList, setAddingToShoppingList] = useState<Set<string>>(new Set());
   
   const supabase = createClient();
 
@@ -63,6 +64,62 @@ export function SavedRecipes() {
       // You could add a toast notification here
     } catch (err) {
       console.error('Failed to copy recipe:', err);
+    }
+  };
+
+  // Add to shopping list functionality
+  const addToShoppingList = async (recipe: SavedRecipe) => {
+    setAddingToShoppingList(prev => new Set([...prev, recipe.id]));
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not found');
+
+      // Parse ingredients from recipe content
+      const ingredientMatches = recipe.content.match(/(?:ingredients?:|what you need:)([\s\S]*?)(?:\n\n|\*\*|$)/i);
+      const ingredientsText = ingredientMatches ? ingredientMatches[1] : '';
+      
+      const ingredients = ingredientsText
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line && (line.startsWith('•') || line.startsWith('-') || /^\d+/.test(line)))
+        .map(line => {
+          // Clean up the ingredient line
+          const cleaned = line.replace(/^[•\-\d\.\)\s]+/, '').trim();
+          // Extract quantity and ingredient name
+          const parts = cleaned.split(/(?<=[\d\/¼½¾⅓⅔⅛⅜⅝⅞])\s+/);
+          return {
+            ingredient_name: parts.length > 1 ? parts.slice(1).join(' ') : cleaned,
+            quantity: parts.length > 1 ? parts[0] : '',
+            recipe_title: recipe.title
+          };
+        })
+        .filter(item => item.ingredient_name);
+
+      // Insert ingredients to shopping list
+      if (ingredients.length > 0) {
+        const { error } = await supabase
+          .from('shopping_list_items')
+          .insert(
+            ingredients.map(ingredient => ({
+              user_id: user.id,
+              ingredient_name: ingredient.ingredient_name,
+              quantity: ingredient.quantity,
+              recipe_title: ingredient.recipe_title
+            }))
+          );
+
+        if (error) throw error;
+        console.log(`Added ${ingredients.length} ingredients to shopping list!`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add to shopping list');
+    } finally {
+      setAddingToShoppingList(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(recipe.id);
+        return newSet;
+      });
     }
   };
 
@@ -184,67 +241,64 @@ export function SavedRecipes() {
                   </AccordionTrigger>
                   
                   <AccordionContent>
-                    <CardContent>
-                    <div className="prose prose-sm max-w-none mb-4">
-                      {formatRecipeContent(recipe.content)}
-                    </div>
-                    
-                    {/* Ingredients and Appliances Used */}
-                    <div className="mb-4 p-3 bg-foreground/5 rounded-lg">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <h4 className="font-medium text-sm mb-2">Ingredients Used:</h4>
-                          <div className="flex flex-wrap gap-1">
-                            {recipe.ingredients_used.map((ingredient, idx) => (
-                              <Badge key={idx} variant="secondary" className="text-xs">
-                                {ingredient}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-sm mb-2">Appliances Used:</h4>
-                          <div className="flex flex-wrap gap-1">
-                            {recipe.appliances_used.map((appliance, idx) => (
-                              <Badge key={idx} variant="outline" className="text-xs">
-                                {appliance}
-                              </Badge>
-                            ))}
-                          </div>
+                    <div className="space-y-4">
+                      {/* Recipe Content with Scrollability */}
+                      <div className="max-h-96 overflow-y-auto border rounded-lg p-4 bg-muted/20">
+                        <div className="prose prose-sm max-w-none">
+                          {formatRecipeContent(recipe.content)}
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex gap-2 pt-4 border-t">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => shareRecipe(recipe)}
-                      >
-                        <Share className="mr-1 h-3 w-3" />
-                        Copy Recipe
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => deleteRecipe(recipe.id)}
-                        disabled={deletingRecipes.has(recipe.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        {deletingRecipes.has(recipe.id) ? (
-                          <>
-                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                            Deleting...
-                          </>
-                        ) : (
-                          <>
-                            <Trash2 className="mr-1 h-3 w-3" />
-                            Delete
-                          </>
-                        )}
-                      </Button>
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap gap-2 pt-4 border-t">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => addToShoppingList(recipe)}
+                          disabled={addingToShoppingList.has(recipe.id)}
+                          className="text-green-600 hover:text-green-700"
+                        >
+                          {addingToShoppingList.has(recipe.id) ? (
+                            <>
+                              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                              Adding...
+                            </>
+                          ) : (
+                            <>
+                              <ShoppingCart className="mr-1 h-3 w-3" />
+                              Add to Shopping List
+                            </>
+                          )}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => shareRecipe(recipe)}
+                        >
+                          <Share className="mr-1 h-3 w-3" />
+                          Copy Recipe
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => deleteRecipe(recipe.id)}
+                          disabled={deletingRecipes.has(recipe.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          {deletingRecipes.has(recipe.id) ? (
+                            <>
+                              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                              Deleting...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="mr-1 h-3 w-3" />
+                              Delete
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
-                  </CardContent>
                   </AccordionContent>
                 </AccordionItem>
               ))}
