@@ -1,4 +1,6 @@
 # 🍲 NextMeal - AI Recipe Generator
+## [Vercel Deployment Link](https://nexium-internship-1m5x.vercel.app/)
+
 
 > Transform your ingredients into delicious recipes with AI-powered suggestions
 
