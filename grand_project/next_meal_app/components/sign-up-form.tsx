@@ -61,15 +61,10 @@ export function SignUpForm({
     setError(null);
     
     try {
-      const isLocal = window.location.hostname === 'localhost';
-      const redirectTo = isLocal 
-        ? `${window.location.origin}/auth/callback`
-        : `${window.location.origin}/dashboard`;
-        
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo
+          redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`
         }
       });
       if (error) throw error;
