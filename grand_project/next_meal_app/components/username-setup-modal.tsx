@@ -73,20 +73,24 @@ export function UsernameSetupModal({ isOpen, onComplete, userEmail, user }: User
 
       if (updateError) throw updateError;
 
-      // Create user profile in database if needed
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          username: username.trim(),
-          full_name: fullName.trim() || username.trim(),
-          email: userEmail,
-          updated_at: new Date().toISOString(),
-        });
+      // Create user profile in database if needed (optional - table might not exist)
+      try {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: user.id,
+            username: username.trim(),
+            full_name: fullName.trim() || username.trim(),
+            email: userEmail,
+            updated_at: new Date().toISOString(),
+          });
 
-      // Don't throw error if profiles table doesn't exist yet
-      if (profileError && !profileError.message.includes('relation "profiles" does not exist')) {
-        console.warn('Profile table error:', profileError);
+        if (profileError) {
+          console.warn('Profile table error (this is usually fine):', profileError);
+        }
+      } catch (profileError) {
+        // Silently ignore profile table errors as the table might not exist
+        console.warn('Profile table not available (this is fine):', profileError);
       }
 
       onComplete();
