@@ -19,12 +19,24 @@ export function IngredientInput() {
     const loadIngredients = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) {
+          console.log('❌ No user found for ingredients');
+          return;
+        }
 
-      const { data, error } = await supabase
-        .from('ingredients')
-        .select('name')
-        .eq('user_id', user.id);        if (error) throw error;
+        console.log('🔍 Loading ingredients for user:', user.id);
+
+        const { data, error } = await supabase
+          .from('ingredients')
+          .select('name')
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('❌ Error loading ingredients:', error);
+          throw error;
+        }
+
+        console.log('✅ Loaded ingredients:', data);
         setIngredients(data?.map(item => item.name) || []);
       } catch (error) {
         console.error('Error loading ingredients:', error);
