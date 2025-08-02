@@ -75,44 +75,86 @@ export function SavedRecipes() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not found');
 
-      // Parse ingredients from recipe content
-      const ingredientMatches = recipe.content.match(/(?:ingredients?:|what you need:)([\s\S]*?)(?:\n\n|\*\*|$)/i);
-      const ingredientsText = ingredientMatches ? ingredientMatches[1] : '';
+      console.log('🛒 Adding ingredients from saved recipe:', recipe.title);
+      console.log('📝 Recipe content:', recipe.content);
+
+      // Enhanced ingredient parsing - try multiple approaches
+      let ingredients: string[] = [];
+      const content = recipe.content;
+
+      // Method 1: Look for ingredients section
+      const ingredientSectionMatch = content.match(/(?:ingredients?:|what you need:)([\s\S]*?)(?:\n\n|instructions?:|method:|steps?:|preparation:|$)/i);
       
-      const ingredients = ingredientsText
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line && (line.startsWith('•') || line.startsWith('-') || /^\d+/.test(line)))
-        .map(line => {
-          // Clean up the ingredient line
-          const cleaned = line.replace(/^[•\-\d\.\)\s]+/, '').trim();
-          // Extract quantity and ingredient name
-          const parts = cleaned.split(/(?<=[\d\/¼½¾⅓⅔⅛⅜⅝⅞])\s+/);
-          return {
-            ingredient_name: parts.length > 1 ? parts.slice(1).join(' ') : cleaned,
-            quantity: parts.length > 1 ? parts[0] : '',
-            recipe_title: recipe.title
-          };
-        })
-        .filter(item => item.ingredient_name);
-
-      // Insert ingredients to shopping list
-      if (ingredients.length > 0) {
-        const { error } = await supabase
-          .from('shopping_list_items')
-          .insert(
-            ingredients.map(ingredient => ({
-              user_id: user.id,
-              ingredient_name: ingredient.ingredient_name,
-              quantity: ingredient.quantity,
-              recipe_title: ingredient.recipe_title
-            }))
-          );
-
-        if (error) throw error;
-        console.log(`Added ${ingredients.length} ingredients to shopping list!`);
+      if (ingredientSectionMatch) {
+        console.log('✅ Found ingredients section');
+        const ingredientsText = ingredientSectionMatch[1];
+        ingredients = ingredientsText
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => line && (line.startsWith('•') || line.startsWith('-') || line.startsWith('*') || /^\d+/.test(line)))
+          .map(line => line.replace(/^[•\-\*\d\.\)\s]+/, '').trim())
+          .filter(line => line.length > 2);
       }
+
+      // Method 2: If no ingredients section found, look for lines that look like ingredients
+      if (ingredients.length === 0) {
+        console.log('⚠️ No ingredients section found, trying pattern matching');
+        ingredients = content
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => {
+            // Look for lines that contain measurements or ingredient patterns
+            return line.length > 3 && (
+              /\d+\s*(cup|cups|tbsp|tsp|tablespoon|teaspoon|oz|ounce|pound|lb|gram|kg|ml|liter)/.test(line.toLowerCase()) ||
+              line.startsWith('•') || line.startsWith('-') || line.startsWith('*') ||
+              /^\d+/.test(line)
+            );
+          })
+          .map(line => line.replace(/^[•\-\*\d\.\)\s]+/, '').trim())
+          .filter(line => line.length > 2);
+      }
+
+      // Method 3: Fallback - use ingredients_used array if available
+      if (ingredients.length === 0 && recipe.ingredients_used && recipe.ingredients_used.length > 0) {
+        console.log('⚠️ Using ingredients_used array as fallback');
+        ingredients = recipe.ingredients_used;
+      }
+
+      console.log('🥕 Final parsed ingredients:', ingredients);
+
+      if (ingredients.length === 0) {
+        throw new Error('No ingredients found in this recipe');
+      }
+
+      // Insert ingredients to shopping list (using correct table name)
+      const shoppingListItems = ingredients.map(ingredient => ({
+        user_id: user.id,
+        ingredient_name: ingredient,
+        quantity: '1 unit',
+        recipe_title: recipe.title,
+        is_completed: false
+      }));
+
+      console.log('💾 Inserting to shopping_list table:', shoppingListItems);
+
+      const { error } = await supabase
+        .from('shopping_list')
+        .insert(shoppingListItems);
+
+      if (error) {
+        console.error('❌ Database error:', error);
+        throw error;
+      }
+
+      console.log(`✅ Successfully added ${ingredients.length} ingredients to shopping list!`);
+      
+      // Show success message
+      setError(null);
+      // You could add a success toast here instead of alert
+      alert(`Added ${ingredients.length} ingredients to your shopping list!`);
+
     } catch (err) {
+      console.error('❌ Error in addToShoppingList:', err);
       setError(err instanceof Error ? err.message : 'Failed to add to shopping list');
     } finally {
       setAddingToShoppingList(prev => {
