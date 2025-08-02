@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { DashboardTabs } from "./dashboard-tabs";
 import { UsernameSetupModal } from "./username-setup-modal";
-import { AuthButton } from "./auth-button";
+import { ClientAuthButton } from "./client-auth-button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
@@ -74,7 +74,7 @@ export function DashboardContent() {
             <div className="flex gap-5 items-center font-semibold">
               <Link href="/" className="text-blue-600 dark:text-blue-400 font-bold hover:text-blue-700 dark:hover:text-blue-300 transition-colors">NextMeal 🍲</Link>
             </div>
-            <AuthButton />
+            <ClientAuthButton />
           </div>
         </nav>
         
