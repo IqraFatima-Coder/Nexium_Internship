@@ -37,6 +37,11 @@ interface Summary {
   title?: string;
   fullContent: string;
   isSaved?: boolean;
+  // Enhanced metadata from improved scraping
+  wordCount?: number;
+  charCount?: number;
+  extractionScore?: number;
+  extractionMethod?: string;
 }
 
 interface SummaryDisplayProps {

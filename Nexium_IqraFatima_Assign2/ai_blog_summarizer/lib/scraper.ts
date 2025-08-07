@@ -1,3 +1,4 @@
+// Enhanced scraping utilities for better reliability
 // Remove unused import
 // import { generateSummary, assessContentQuality } from './translate';
 import { assessContentQuality } from './translate';
@@ -8,6 +9,8 @@ export interface ScrapedContent {
   url: string;
   domain?: string;
   wordCount?: number;
+  extractionScore?: number;
+  extractionMethod?: string;
   quality?: {
     score: number;
     issues: string[];
@@ -15,60 +18,109 @@ export interface ScrapedContent {
   };
 }
 
-export async function scrapeWebContent(url: string): Promise<ScrapedContent> {
+// Enhanced scraping with retry logic and better error handling
+
+// Enhanced scraping with retry logic and better error handling
+export async function scrapeWebContent(url: string, retries = 2): Promise<ScrapedContent> {
+  let lastError: Error | null = null;
+  
+  // Try multiple attempts with exponential backoff
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      // Validate URL format
+      const urlObj = new URL(url);
+      
+      // Check for supported protocols
+      if (!['http:', 'https:'].includes(urlObj.protocol)) {
+        throw new Error('Only HTTP and HTTPS URLs are supported');
+      }
+
+      console.log(`🔄 Scraping attempt ${attempt + 1}/${retries + 1} for: ${url}`);
+      
+      // Make API call to scraping endpoint with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
+      
+      const response = await fetch(`/api/scrape?url=${encodeURIComponent(url)}`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to scrape content`);
+      }
+      
+      const data = await response.json();
+      
+      // Enhanced validation
+      if (!data.content || typeof data.content !== 'string' || data.content.trim().length < 50) {
+        throw new Error('Insufficient content found on the webpage. Please try a different URL.');
+      }
+      
+      // Assess content quality
+      const quality = assessContentQuality(data.content);
+      
+      if (quality.score < 30 && attempt < retries) {
+        console.warn(`⚠️ Low quality content (score: ${quality.score}), retrying...`);
+        throw new Error('Content quality too low, retrying with different method');
+      }
+      
+      console.log(`✅ Successfully scraped content: ${data.title} (${data.content.length} chars, score: ${data.extractionScore || 'N/A'})`);
+      
+      return {
+        title: data.title || 'Untitled',
+        content: data.content,
+        url: url,
+        domain: urlObj.hostname,
+        wordCount: data.wordCount || data.content.split(' ').filter((w: string) => w.length > 0).length,
+        extractionScore: data.extractionScore,
+        extractionMethod: data.extractionMethod,
+        quality: quality
+      };
+      
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error('Unknown error occurred');
+      console.error(`❌ Attempt ${attempt + 1} failed:`, lastError.message);
+      
+      // Don't retry on certain errors
+      if (error instanceof Error && (
+        error.message.includes('Invalid URL') ||
+        error.message.includes('Only HTTP and HTTPS') ||
+        error.message.includes('AbortError')
+      )) {
+        throw error;
+      }
+      
+      // Wait before retry (exponential backoff)
+      if (attempt < retries) {
+        const delay = Math.min(1000 * Math.pow(2, attempt), 5000);
+        console.log(`⏳ Waiting ${delay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  // All attempts failed
+  throw new Error(
+    `Failed to scrape content after ${retries + 1} attempts. Last error: ${lastError?.message || 'Unknown error'}`
+  );
+}
+
+// Utility function to validate and normalize URLs
+export function validateAndNormalizeUrl(url: string): string {
   try {
-    // Validate URL format
     const urlObj = new URL(url);
-    
-    // Check for supported protocols
     if (!['http:', 'https:'].includes(urlObj.protocol)) {
       throw new Error('Only HTTP and HTTPS URLs are supported');
     }
-    
-    // Make API call to scraping endpoint
-    const response = await fetch(`/api/scrape?url=${encodeURIComponent(url)}`);
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP ${response.status}: Failed to scrape content`);
-    }
-    
-    const data = await response.json();
-    
-    // Validate scraped content
-    if (!data.content || data.content.trim().length < 50) {
-      throw new Error('Insufficient content found on the webpage. Please try a different URL.');
-    }
-    
-    // Assess content quality
-    const quality = assessContentQuality(data.content);
-    
-    if (quality.score < 30) {
-      console.warn('Low quality content detected:', quality.issues);
-    }
-    
-    return {
-      title: data.title || 'Untitled Article',
-      content: data.content,
-      url: url,
-      domain: data.domain || urlObj.hostname,
-      wordCount: data.wordCount || data.content.split(' ').length,
-      quality: quality
-    };
-    
-  } catch (err) {
-    console.error('Scraping error:', err);
-    
-    // Provide user-friendly error messages
-    if (err instanceof TypeError && err.message.includes('Invalid URL')) {
+    return urlObj.toString();
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Invalid URL')) {
       throw new Error('Please enter a valid URL starting with http:// or https://');
     }
-    
-    if (err instanceof Error) {
-      throw err; // Re-throw with original message
-    }
-    
-    throw new Error('Unable to process the webpage. Please try a different URL.');
+    throw error;
   }
 }
 

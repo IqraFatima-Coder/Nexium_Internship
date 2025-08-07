@@ -68,8 +68,8 @@ export default function Home() {
       
       setSuccessMessage("Summary generated! Translating to Urdu...");
       
-      // Step 3: Translate to Urdu
-      const urduSummary = translateToUrdu(englishSummary);
+      // Step 3: Translate to Urdu using new async API
+      const urduSummary = await translateToUrdu(englishSummary);
       
       // Step 4: Create summary object
       const newSummary: Summary = {
@@ -151,43 +151,77 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen relative overflow-hidden">
+      {/* Enhanced Hero Section */}
       <Hero />
-      <div className="container mx-auto max-w-7xl p-6 space-y-12">
+      
+      <div className="container mx-auto max-w-7xl p-6 space-y-12 relative z-10">
         
-        {/* Form */}
+        {/* Enhanced Form Section */}
         <div id="summarize-form" className="pt-12">
-          <BlogForm onSubmit={handleSubmit} isLoading={isLoading} />
+          <div className="glass-card max-w-4xl mx-auto p-8 smooth-transition card-hover">
+            <BlogForm onSubmit={handleSubmit} isLoading={isLoading} />
+          </div>
         </div>
         
-        {/* Success Message */}
+        {/* Enhanced Success Message with Animation */}
         {successMessage && !summary && (
           <div className="max-w-4xl mx-auto">
-            <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                <p className="text-green-800 dark:text-green-200 font-medium">{successMessage}</p>
+            <div className="glass-card bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border border-green-200/50 dark:border-green-800/50 rounded-2xl p-6 success-bounce">
+              <div className="flex items-center gap-4">
+                <div className="pulse-ring w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                  <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-green-800 dark:text-green-200 font-semibold text-lg">{successMessage}</p>
+                  <div className="mt-2 w-full bg-green-200 dark:bg-green-800 rounded-full h-2">
+                    <div className="bg-gradient-to-r from-green-400 to-emerald-500 h-2 rounded-full animate-pulse"></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         )}
         
-        {/* Error Message */}
+        {/* Enhanced Error Message */}
         {error && (
           <div className="max-w-4xl mx-auto">
-            <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                <p className="text-red-800 dark:text-red-200 font-medium">{error}</p>
+            <div className="glass-card bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 border border-red-200/50 dark:border-red-800/50 rounded-2xl p-6 smooth-transition">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                  <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-red-800 dark:text-red-200 font-semibold text-lg">{error}</p>
+                  <p className="text-red-600 dark:text-red-400 text-sm mt-1">Please try again with a different URL or check your internet connection.</p>
+                </div>
               </div>
             </div>
           </div>
         )}
         
-        {/* Summary Display */}
+        {/* Enhanced Summary Display */}
         {summary && (
           <div className="max-w-6xl mx-auto">
-            <SummaryDisplay summary={summary} onSave={handleSave} />
+            <div className="glass-card p-8 card-hover">
+              <SummaryDisplay summary={summary} onSave={handleSave} />
+            </div>
+          </div>
+        )}
+        
+        {/* Loading Overlay */}
+        {isLoading && (
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
+            <div className="glass-card p-8 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 relative">
+                <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary animate-spin"></div>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Processing Your Request</h3>
+              <p className="text-muted-foreground">
+                {successMessage || "Analyzing and summarizing content..."}
+              </p>
+            </div>
           </div>
         )}
       </div>

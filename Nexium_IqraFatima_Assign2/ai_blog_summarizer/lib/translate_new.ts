@@ -1,6 +1,12 @@
 // Professional translation service using Google Translate API
 // This provides much better Urdu translations than dictionary-based approach
 
+interface TranslationResponse {
+  translatedText: string;
+  sourceLanguage: string;
+  confidence: number;
+}
+
 // Enhanced AI summary generation
 export function generateSummary(content: string): string {
   if (!content || content.length < 50) {
