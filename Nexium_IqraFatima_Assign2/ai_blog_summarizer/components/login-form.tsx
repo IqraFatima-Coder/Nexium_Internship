@@ -37,11 +37,27 @@ export function LoginForm({
         email,
         password,
       });
-      if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/protected");
+      
+      if (error) {
+        // Handle specific error cases for better user experience
+        if (error.message.includes('Invalid login credentials') || error.message.includes('Email not confirmed')) {
+          setError('Invalid email or password. Please check your credentials and try again.');
+        } else if (error.message.includes('Email not confirmed')) {
+          setError('Please check your email and click the confirmation link before logging in.');
+        } else if (error.message.includes('Too many requests')) {
+          setError('Too many login attempts. Please wait a moment and try again.');
+        } else {
+          setError(error.message);
+        }
+        setIsLoading(false);
+        return;
+      }
+      
+      // Redirect to home page where users can use the blog summarizer
+      router.push("/");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      const errorMessage = error instanceof Error ? error.message : "An error occurred";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -88,7 +104,19 @@ export function LoginForm({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && (
+                <div className="p-3 rounded-md bg-red-50 border border-red-200 dark:bg-red-950 dark:border-red-800">
+                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                  {error.includes('Invalid email or password') && (
+                    <p className="text-xs text-red-500 dark:text-red-400 mt-2">
+                      Don&apos;t have an account?{" "}
+                      <Link href="/auth/sign-up" className="underline underline-offset-4 hover:text-red-700 dark:hover:text-red-300">
+                        Sign up here
+                      </Link>
+                    </p>
+                  )}
+                </div>
+              )}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
               </Button>

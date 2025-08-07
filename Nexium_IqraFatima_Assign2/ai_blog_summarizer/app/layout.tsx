@@ -3,6 +3,8 @@ import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { Header } from "@/components/header";
+import { AuthWrapper } from "@/components/auth-wrapper";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -37,9 +39,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <main className="min-h-screen flex flex-col items-center">
-            {children}
-          </main>
+          <AuthWrapper>
+            <Header />
+            <main className="min-h-screen flex flex-col items-center">
+              {children}
+            </main>
+          </AuthWrapper>
           <Toaster richColors />
         </ThemeProvider>
       </body>

@@ -38,11 +38,28 @@ export default function Home() {
       const scrapeResponse = await fetch(`/api/scrape?url=${encodeURIComponent(url)}`);
       
       if (!scrapeResponse.ok) {
-        const errorData = await scrapeResponse.json();
-        throw new Error(errorData.details || 'Failed to scrape content');
+        let errorMessage = 'Failed to scrape content';
+        try {
+          const errorData = await scrapeResponse.json();
+          errorMessage = errorData.details || errorData.error || errorMessage;
+        } catch {
+          // If response isn't JSON, it might be an HTML error page
+          const responseText = await scrapeResponse.text();
+          if (responseText.includes('<!DOCTYPE') || responseText.includes('<html')) {
+            errorMessage = `Server error (${scrapeResponse.status}). The website might be blocking access or the server is experiencing issues.`;
+          } else {
+            errorMessage = `HTTP ${scrapeResponse.status}: ${scrapeResponse.statusText}`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
-      const data = await scrapeResponse.json();
+      let data;
+      try {
+        data = await scrapeResponse.json();
+      } catch {
+        throw new Error('Received invalid response from server. Please try again.');
+      }
       
       if (!data.content) {
         throw new Error('No content found on the webpage');

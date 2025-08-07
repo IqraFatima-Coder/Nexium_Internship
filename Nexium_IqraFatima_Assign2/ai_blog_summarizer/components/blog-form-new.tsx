@@ -14,64 +14,22 @@ interface BlogFormProps {
 
 export function BlogForm({ onSubmit, isLoading }: BlogFormProps) {
   const [url, setUrl] = useState("");
-  const [urlError, setUrlError] = useState("");
-
-  const validateUrl = (urlString: string) => {
-    if (!urlString.trim()) {
-      setUrlError("");
-      return false;
-    }
-
-    try {
-      const urlObj = new URL(urlString);
-      if (!['http:', 'https:'].includes(urlObj.protocol)) {
-        setUrlError("Please enter a valid HTTP or HTTPS URL");
-        return false;
-      }
-      setUrlError("");
-      return true;
-    } catch {
-      setUrlError("Please enter a valid URL (e.g., https://example.com/article)");
-      return false;
-    }
-  };
-
-  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newUrl = e.target.value;
-    setUrl(newUrl);
-    if (newUrl.trim()) {
-      validateUrl(newUrl);
-    } else {
-      setUrlError("");
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmedUrl = url.trim();
-    
-    if (!trimmedUrl) {
-      setUrlError("Please enter a URL");
-      return;
+    if (url.trim()) {
+      await onSubmit(url.trim());
     }
-
-    if (!validateUrl(trimmedUrl)) {
-      return;
-    }
-
-    await onSubmit(trimmedUrl);
   };
 
   const exampleUrls = [
+    "https://blog.vercel.com/posts/react-19",
     "https://nextjs.org/blog/next-14-2",
-    "https://react.dev/blog/2024/02/15/react-labs-what-we-have-been-working-on-february-2024",
-    "https://tailwindcss.com/blog/tailwindcss-v3-4"
+    "https://www.builder.io/blog/structured-data-for-ai"
   ];
 
   const fillExample = (exampleUrl: string) => {
     setUrl(exampleUrl);
-    setUrlError(""); // Clear any existing error
-    validateUrl(exampleUrl); // Validate the new URL
   };
 
   return (
@@ -82,10 +40,10 @@ export function BlogForm({ onSubmit, isLoading }: BlogFormProps) {
           <Sparkles className="h-10 w-10 text-primary animate-pulse" />
         </div>
         <div className="space-y-3">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-purple-400 dark:to-blue-400">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
             AI-Powered Blog Summarizer
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Transform any article into concise summaries in both English and Urdu. 
             Just paste a URL and let our AI do the magic! ✨
           </p>
@@ -113,29 +71,21 @@ export function BlogForm({ onSubmit, isLoading }: BlogFormProps) {
                   type="url"
                   placeholder="https://example.com/amazing-article"
                   value={url}
-                  onChange={handleUrlChange}
+                  onChange={(e) => setUrl(e.target.value)}
                   required
                   disabled={isLoading}
-                  className={`input-modern h-14 text-lg pl-6 pr-6 border-2 transition-all duration-300 ${
-                    urlError ? 'border-red-300 focus:border-red-400' : 'border-primary/20 hover:border-primary/40 focus:border-primary'
-                  }`}
+                  className="input-modern h-14 text-lg pl-6 pr-6 border-2 border-primary/20 hover:border-primary/40 focus:border-primary transition-all duration-300"
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-4">
                   <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
                 </div>
               </div>
-              {urlError && (
-                <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                  <span className="w-4 h-4 rounded-full bg-red-100 flex items-center justify-center">!</span>
-                  {urlError}
-                </p>
-              )}
             </div>
 
             {/* Enhanced Submit Button */}
             <Button
               type="submit"
-              disabled={!url.trim() || isLoading || !!urlError}
+              disabled={!url.trim() || isLoading}
               className="w-full h-14 text-lg font-semibold btn-gradient hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isLoading ? (

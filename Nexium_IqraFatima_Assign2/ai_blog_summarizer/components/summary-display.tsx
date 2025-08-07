@@ -18,15 +18,16 @@ import {
   Timer,
   ArrowRight,
   Globe,
-  FileText,
+  FileText
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { createClient } from "@/lib/supabase/client";
 
 interface Summary {
   id?: string;
@@ -52,19 +53,60 @@ interface SummaryDisplayProps {
 export function SummaryDisplay({ summary, onSave }: SummaryDisplayProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(summary.isSaved || false);
+  const [user, setUser] = useState<{id: string} | null>(null);
+  
+  const supabase = createClient();
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    checkAuth();
+  }, [supabase.auth]);
 
   const handleSave = async () => {
-    if (onSave && !isSaved) {
-      setIsSaving(true);
-      try {
-        await onSave(summary);
-        setIsSaved(true);
-      } catch (error) {
-        console.error("Save failed:", error);
-        // Optionally, show an error message to the user
-      } finally {
-        setIsSaving(false);
+    if (!user) {
+      console.log("Please log in to save content");
+      return;
+    }
+
+    setIsSaving(true);
+    
+    try {
+      // Call our enhanced save API
+      const response = await fetch('/api/save-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: summary.originalUrl,
+          content: summary.fullContent,
+          title: summary.title,
+          summary: summary.englishSummary,
+          isSaved: true,
+          tags: [] // Could be enhanced to allow user to add tags
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save content');
       }
+
+      setIsSaved(true);
+      
+      // Call the original onSave if provided (for backward compatibility)
+      if (onSave) {
+        await onSave(summary);
+      }
+    } catch (error) {
+      console.error("Save failed:", error);
+      // You could add toast notification here instead of state
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -106,19 +148,30 @@ export function SummaryDisplay({ summary, onSave }: SummaryDisplayProps) {
               </Badge>
             ) : (
               onSave && (
-                <Button onClick={handleSave} disabled={isSaving}>
-                  {isSaving ? (
-                    <>
-                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Summary
-                    </>
-                  )}
-                </Button>
+                user ? (
+                  <Button onClick={handleSave} disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Summary
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => window.location.href = '/auth/login'}
+                    className="border-primary text-primary hover:bg-primary hover:text-white"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Login/Signup to Save
+                  </Button>
+                )
               )
             )}
           </div>

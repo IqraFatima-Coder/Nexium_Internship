@@ -31,62 +31,73 @@ async function scrapeWithFetch(url: string): Promise<string> {
 }
 
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const url = searchParams.get('url');
-
-  if (!url) {
-    return NextResponse.json({ error: 'URL is required' }, { status: 400 });
-  }
-
-  // Validate URL format
   try {
-    new URL(url);
-  } catch {
-    return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
-  }
+    const searchParams = request.nextUrl.searchParams;
+    const url = searchParams.get('url');
 
-  console.log(`🔍 Attempting to scrape: ${url}`);
+    if (!url) {
+      return NextResponse.json({ error: 'URL is required' }, { status: 400 });
+    }
 
-  // Try multiple scraping methods with retries
-  const scrapingMethods = [
-    () => scrapeWithAxios(url),
-    () => scrapeWithFetch(url),
-    () => scrapeWithAxios(url, true) // Retry axios with different config
-  ];
-
-  let lastError: Error | null = null;
-
-  for (let methodIndex = 0; methodIndex < scrapingMethods.length; methodIndex++) {
+    // Validate URL format
     try {
-      console.log(`📡 Trying scraping method ${methodIndex + 1}/${scrapingMethods.length}`);
-      const html = await scrapingMethods[methodIndex]();
-      
-      const extractedData = extractContentFromHtml(html, url);
-      if (extractedData.content && extractedData.content.length > 100) {
-        console.log(`✅ Successfully scraped with method ${methodIndex + 1}: ${extractedData.title} (${extractedData.content.length} characters)`);
-        return NextResponse.json(extractedData);
-      } else {
-        throw new Error('Insufficient content extracted');
-      }
-    } catch (error) {
-      console.error(`❌ Method ${methodIndex + 1} failed:`, error);
-      lastError = error instanceof Error ? error : new Error('Unknown error');
-      
-      // Wait before trying next method
-      if (methodIndex < scrapingMethods.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      new URL(url);
+    } catch {
+      return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
+    }
+
+    console.log(`🔍 Attempting to scrape: ${url}`);
+
+    // Try multiple scraping methods with retries
+    const scrapingMethods = [
+      () => scrapeWithAxios(url),
+      () => scrapeWithFetch(url),
+      () => scrapeWithAxios(url, true) // Retry axios with different config
+    ];
+
+    let lastError: Error | null = null;
+
+    for (let methodIndex = 0; methodIndex < scrapingMethods.length; methodIndex++) {
+      try {
+        console.log(`📡 Trying scraping method ${methodIndex + 1}/${scrapingMethods.length}`);
+        const html = await scrapingMethods[methodIndex]();
+        
+        const extractedData = extractContentFromHtml(html, url);
+        if (extractedData.content && extractedData.content.length > 100) {
+          console.log(`✅ Successfully scraped with method ${methodIndex + 1}: ${extractedData.title} (${extractedData.content.length} characters)`);
+          return NextResponse.json(extractedData);
+        } else {
+          throw new Error('Insufficient content extracted');
+        }
+      } catch (error) {
+        console.error(`❌ Method ${methodIndex + 1} failed:`, error);
+        lastError = error instanceof Error ? error : new Error('Unknown error');
+        
+        // Wait before trying next method
+        if (methodIndex < scrapingMethods.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
       }
     }
-  }
 
-  // All methods failed
-  console.error('❌ All scraping methods failed');
-  return NextResponse.json({
-    error: 'Failed to scrape content after trying multiple methods',
-    details: lastError?.message || 'All scraping attempts failed',
-    url: url,
-    suggestion: 'The website might be blocking scraping or have anti-bot protection'
-  }, { status: 500 });
+    // All methods failed
+    console.error('❌ All scraping methods failed');
+    return NextResponse.json({
+      error: 'Failed to scrape content after trying multiple methods',
+      details: lastError?.message || 'All scraping attempts failed',
+      url: url,
+      suggestion: 'The website might be blocking scraping or have anti-bot protection'
+    }, { status: 500 });
+
+  } catch (error) {
+    // Global error handler to ensure we always return JSON
+    console.error('❌ Unexpected error in scrape API:', error);
+    return NextResponse.json({
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'An unexpected error occurred',
+      suggestion: 'Please try again or contact support if the issue persists'
+    }, { status: 500 });
+  }
 }
 
 // Primary scraping method using axios

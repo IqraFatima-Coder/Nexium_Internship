@@ -32,14 +32,14 @@ export function Hero() {
             {/* Main headline */}
             <div className="space-y-4">
               <h1 className="text-5xl md:text-7xl font-bold leading-tight">
-                <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-purple-400 dark:to-blue-400">
+                <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
                   Smart Blog
                 </span>
                 <br />
-                <span className="text-gray-900 dark:text-gray-100">Summarizer</span>
+                <span className="text-foreground">Summarizer</span>
               </h1>
               
-              <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 leading-relaxed max-w-2xl">
+              <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-2xl">
                 Transform lengthy articles into concise summaries instantly. 
                 Get bilingual insights in English and Urdu with our cutting-edge AI technology.
               </p>
@@ -48,16 +48,16 @@ export function Hero() {
             {/* Feature highlights */}
             <div className="grid md:grid-cols-3 gap-4">
               <div className="flex items-center gap-3 p-4 rounded-xl glass-card">
-                <Zap className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                <span className="font-medium text-gray-900 dark:text-gray-100">Lightning Fast</span>
+                <Zap className="h-6 w-6 text-primary" />
+                <span className="font-medium">Lightning Fast</span>
               </div>
               <div className="flex items-center gap-3 p-4 rounded-xl glass-card">
-                <Languages className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                <span className="font-medium text-gray-900 dark:text-gray-100">Bilingual Support</span>
+                <Languages className="h-6 w-6 text-primary" />
+                <span className="font-medium">Bilingual Support</span>
               </div>
               <div className="flex items-center gap-3 p-4 rounded-xl glass-card">
-                <Globe className="h-6 w-6 text-green-600 dark:text-green-400" />
-                <span className="font-medium text-gray-900 dark:text-gray-100">Any Website</span>
+                <Globe className="h-6 w-6 text-primary" />
+                <span className="font-medium">Any Website</span>
               </div>
             </div>
 
@@ -96,17 +96,17 @@ export function Hero() {
               </div>
               
               {/* Floating icons */}
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-blue-100 dark:bg-blue-900/50 border-2 border-blue-200 dark:border-blue-700 rounded-full flex items-center justify-center animate-bounce shadow-lg">
-                <Sparkles className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center animate-bounce">
+                <Sparkles className="h-6 w-6 text-primary" />
               </div>
-              <div className="absolute top-1/2 -right-4 transform -translate-y-1/2 w-12 h-12 bg-purple-100 dark:bg-purple-900/50 border-2 border-purple-200 dark:border-purple-700 rounded-full flex items-center justify-center animate-bounce delay-1000 shadow-lg">
-                <Languages className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              <div className="absolute top-1/2 -right-4 transform -translate-y-1/2 w-12 h-12 bg-secondary/20 rounded-full flex items-center justify-center animate-bounce delay-1000">
+                <Languages className="h-6 w-6 text-secondary" />
               </div>
-              <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-green-100 dark:bg-green-900/50 border-2 border-green-200 dark:border-green-700 rounded-full flex items-center justify-center animate-bounce delay-2000 shadow-lg">
-                <Zap className="h-6 w-6 text-green-600 dark:text-green-400" />
+              <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center animate-bounce delay-2000">
+                <Zap className="h-6 w-6 text-accent" />
               </div>
-              <div className="absolute top-1/2 -left-4 transform -translate-y-1/2 w-12 h-12 bg-indigo-100 dark:bg-indigo-900/50 border-2 border-indigo-200 dark:border-indigo-700 rounded-full flex items-center justify-center animate-bounce delay-3000 shadow-lg">
-                <Globe className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+              <div className="absolute top-1/2 -left-4 transform -translate-y-1/2 w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center animate-bounce delay-3000">
+                <Globe className="h-6 w-6 text-primary" />
               </div>
             </div>
           </div>
